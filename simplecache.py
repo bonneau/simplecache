@@ -45,8 +45,7 @@ class SimpleCache(object):
         del self._d[k]
 
     def __iter__(self):
-        # TODO: Implement
-        pass
+        return self._d.iterkeys()
 
     def __expire_if_necessary(self, k, t):
         if t and time.time() > t:
