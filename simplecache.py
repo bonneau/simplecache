@@ -5,7 +5,10 @@ from threading import Condition
 
 
 class SimpleCache(object):
-    def __init__(self, timeout=None, max_items=None):
+    def __init__(self, timeout=None, max_items=1000):
+        if max_items is None or max_items <= 0:
+            raise Exception("max_items must be a positive integer")
+
         self._d = OrderedDict()
         self._timeout = timeout
         self._max_items = max_items
@@ -51,7 +54,7 @@ class SimpleCache(object):
             raise KeyError(k)
 
     def __prune_if_necessary(self):
-        if self._max_items and len(self._d) > self._max_items:
+        if len(self._d) > self._max_items:
             self._d.popitem(last=False)
 
 
