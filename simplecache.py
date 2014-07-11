@@ -5,7 +5,7 @@ from threading import Condition
 
 
 class SimpleCache(object):
-    def __init__(self, timeout=None, max_items=1000, lru=True):
+    def __init__(self, timeout=None, max_items=1000, lru=True, force_expiry_multiple=10):
         if max_items is None or max_items <= 0:
             raise Exception("max_items must be a positive integer")
 
@@ -14,6 +14,7 @@ class SimpleCache(object):
         self._max_items = max_items
         self._lru = lru
         self._last_expiry_check = time.time()
+        self._force_exipry_multiple = force_expiry_multiple
 
     def __len__(self):
         self.__expire_all_if_necessary()
@@ -62,7 +63,7 @@ class SimpleCache(object):
             return False
 
     def __expire_all_if_necessary(self):
-        if self._timeout and time.time() > self._last_expiry_check + (self._timeout * 10):
+        if self._timeout and time.time() > self._last_expiry_check + (self._timeout * self._force_exipry_multiple):
             for k, v in reversed(self._d):
                 value, timeout = v
                 if timeout and time.time() > timeout:
@@ -74,8 +75,9 @@ class SimpleCache(object):
 
 
 class ThreadSafeSimpleCache(SimpleCache):
-    def __init__(self, timeout=None, max_items=1000, lru=True):
-        super(ThreadSafeSimpleCache, self).__init__(timeout=timeout, max_items=max_items, lru=lru)
+    def __init__(self, timeout=None, max_items=1000, lru=True, force_expiry_multiple=10):
+        super(ThreadSafeSimpleCache, self).__init__(timeout=timeout, max_items=max_items, lru=lru,
+                                                    force_expiry_multiple=force_expiry_multiple)
         self._c = Condition()
 
     def __len__(self):
