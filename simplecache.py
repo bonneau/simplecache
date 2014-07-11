@@ -4,20 +4,15 @@ from collections import OrderedDict
 from threading import Condition
 
 
-def lru_cache_strategy(c, d, k, v):
-    del d[k]
-    c[k] = v
-
-
 class SimpleCache(object):
-    def __init__(self, timeout=None, max_items=1000, cache_strategy=lru_cache_strategy):
+    def __init__(self, timeout=None, max_items=1000, lru=True):
         if max_items is None or max_items <= 0:
             raise Exception("max_items must be a positive integer")
 
         self._d = OrderedDict()
         self._timeout = timeout
         self._max_items = max_items
-        self._cache_strategy = cache_strategy or (lambda c, d, k, v: None)
+        self._lru = lru
         self._last_expiry_check = time.time()
 
     def __len__(self):
@@ -39,7 +34,9 @@ class SimpleCache(object):
         if self.__expire_key_if_necessary(k, t):
             raise KeyError(k)
 
-        self._cache_strategy(self, self._d, k, v)
+        if self._lru:
+            del self._d[k]
+            self[k] = v
 
         return v
 
@@ -77,8 +74,8 @@ class SimpleCache(object):
 
 
 class ThreadSafeSimpleCache(SimpleCache):
-    def __init__(self, timeout=None, max_items=1000, cache_strategy=lru_cache_strategy):
-        super(ThreadSafeSimpleCache, self).__init__(timeout=timeout, max_items=max_items, cache_strategy=cache_strategy)
+    def __init__(self, timeout=None, max_items=1000, lru=True):
+        super(ThreadSafeSimpleCache, self).__init__(timeout=timeout, max_items=max_items, lru=lru)
         self._c = Condition()
 
     def __len__(self):
