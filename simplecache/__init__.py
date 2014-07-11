@@ -1,0 +1,1 @@
+from simplecache import SimpleCache
