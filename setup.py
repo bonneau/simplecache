@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='SimpleCache',
-    version='0.1.1',
+    version='0.1.2',
     author='Scott Bonneau',
     author_email='scott.bonneau@gmail.com',
     packages=['simplecache'],
