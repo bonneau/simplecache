@@ -18,21 +18,25 @@ class SimpleCache(object):
         self._timeout = timeout
         self._max_items = max_items
         self._cache_strategy = cache_strategy or (lambda c, d, k, v: None)
+        self._last_expiry_check = time.time()
 
     def __len__(self):
+        self.__expire_all_if_necessary()
         return len(self._d)
 
     def __contains__(self, k):
+        self.__expire_all_if_necessary()
         if k in self._d:
             v, t = self._d[k]
-            self.__expire_if_necessary(k, t)
+            self.__expire_key_if_necessary(k, t)
             return k in self._d
         else:
             return False
 
     def __getitem__(self, k):
+        self.__expire_all_if_necessary()
         v, t = self._d[k]
-        if self.__expire_if_necessary(k, t):
+        if self.__expire_key_if_necessary(k, t):
             raise KeyError(k)
 
         self._cache_strategy(self, self._d, k, v)
@@ -40,24 +44,32 @@ class SimpleCache(object):
         return v
 
     def __setitem__(self, k, v):
-        timeout = None
-        if self._timeout:
-            timeout = time.time() + self._timeout
+        self.__expire_all_if_necessary()
+        timeout = time.time() + self._timeout if self._timeout else None
         self._d[k] = (v, timeout)
         self.__prune_if_necessary()
 
     def __delitem__(self, k):
+        self.__expire_all_if_necessary()
         del self._d[k]
 
     def __iter__(self):
+        self.__expire_all_if_necessary()
         return self._d.iterkeys()
 
-    def __expire_if_necessary(self, k, t):
+    def __expire_key_if_necessary(self, k, t):
         if t and time.time() > t:
             del self._d[k]
             return True
         else:
             return False
+
+    def __expire_all_if_necessary(self):
+        if self._timeout and time.time() > self._last_expiry_check + (self._timeout * 10):
+            for k, v in reversed(self._d):
+                value, timeout = v
+                if timeout and time.time() > timeout:
+                    del self._d[k]
 
     def __prune_if_necessary(self):
         if len(self._d) > self._max_items:
