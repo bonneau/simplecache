@@ -32,7 +32,8 @@ class SimpleCache(object):
 
     def __getitem__(self, k):
         v, t = self._d[k]
-        self.__expire_if_necessary(k, t)
+        if self.__expire_if_necessary(k, t):
+            raise KeyError(k)
 
         self._cache_strategy(self, self._d, k, v)
 
@@ -54,7 +55,9 @@ class SimpleCache(object):
     def __expire_if_necessary(self, k, t):
         if t and time.time() > t:
             del self._d[k]
-            raise KeyError(k)
+            return True
+        else:
+            return False
 
     def __prune_if_necessary(self):
         if len(self._d) > self._max_items:
