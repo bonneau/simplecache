@@ -62,8 +62,8 @@ class SimpleCache(object):
 
 
 class ThreadSafeSimpleCache(SimpleCache):
-    def __init__(self):
-        super(ThreadSafeSimpleCache, self).__init__()
+    def __init__(self, timeout=None, max_items=1000, cache_strategy=lru_cache_strategy):
+        super(ThreadSafeSimpleCache, self).__init__(timeout=timeout, max_items=max_items, cache_strategy=cache_strategy)
         self._c = Condition()
 
     def __len__(self):
