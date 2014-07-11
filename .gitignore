@@ -1,3 +1,4 @@
 *.pyc
 .idea/*
 MANIFEST
+*.egg-info

@@ -64,7 +64,7 @@ class SimpleCache(object):
 
     def __expire_all_if_necessary(self):
         if self._timeout and time.time() > self._last_expiry_check + (self._timeout * self._force_exipry_multiple):
-            for k, v in reversed(self._d):
+            for k, v in reversed(self._d.items()):
                 value, timeout = v
                 if timeout and time.time() > timeout:
                     del self._d[k]
